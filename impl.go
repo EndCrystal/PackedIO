@@ -193,16 +193,14 @@ func (in Input) ReadBytes() []byte {
 	return buffer[:length]
 }
 
-func (in Input) ReadFixedBytes(length int) []byte {
-	buffer := make([]byte, length)
+func (in Input) ReadFixedBytes(buffer []byte) {
 	ex, err := io.ReadFull(in.reader, buffer)
 	if err != nil {
 		panic(err)
 	}
-	if ex != length {
+	if ex != len(buffer) {
 		panic(EOS)
 	}
-	return buffer[:length]
 }
 
 func (in Input) IterateArray(sizefn func(length int), fn func(i int)) {
