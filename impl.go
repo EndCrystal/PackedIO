@@ -180,6 +180,19 @@ func (in Input) ReadString() string {
 	return string(buffer[:length])
 }
 
+func (in Input) ReadBytes() []byte {
+	length := in.ReadVarUint32()
+	buffer := make([]byte, length)
+	ex, err := io.ReadFull(in.reader, buffer)
+	if err != nil {
+		panic(err)
+	}
+	if uint32(ex) != length {
+		panic(EOS)
+	}
+	return buffer[:length]
+}
+
 func (in Input) IterateArray(sizefn func(length int), fn func(i int)) {
 	length := in.ReadVarUint32()
 	if sizefn != nil {
@@ -333,6 +346,18 @@ func (out Output) WriteString(value string) {
 	}
 	out.WriteVarUint32(uint32(slen))
 	_, err := out.writer.Write([]byte(value))
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (out Output) WriteBytes(value []byte) {
+	slen := len(value)
+	if uint64(slen) >= uint64(^uint32(0)) {
+		panic(EOverflow)
+	}
+	out.WriteVarUint32(uint32(slen))
+	_, err := out.writer.Write(value)
 	if err != nil {
 		panic(err)
 	}
