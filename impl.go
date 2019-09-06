@@ -193,6 +193,18 @@ func (in Input) ReadBytes() []byte {
 	return buffer[:length]
 }
 
+func (in Input) ReadFixedBytes(length int) []byte {
+	buffer := make([]byte, length)
+	ex, err := io.ReadFull(in.reader, buffer)
+	if err != nil {
+		panic(err)
+	}
+	if ex != length {
+		panic(EOS)
+	}
+	return buffer[:length]
+}
+
 func (in Input) IterateArray(sizefn func(length int), fn func(i int)) {
 	length := in.ReadVarUint32()
 	if sizefn != nil {
@@ -357,6 +369,13 @@ func (out Output) WriteBytes(value []byte) {
 		panic(EOverflow)
 	}
 	out.WriteVarUint32(uint32(slen))
+	_, err := out.writer.Write(value)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (out Output) WriteFixedBytes(value []byte) {
 	_, err := out.writer.Write(value)
 	if err != nil {
 		panic(err)
